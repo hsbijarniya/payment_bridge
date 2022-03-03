@@ -11,6 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  js: ^0.6.3
   nb_utils: ^4.4.10
   razorpay_flutter: ^1.2.7
 
