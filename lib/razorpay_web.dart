@@ -1,5 +1,5 @@
-import 'dart:html';
-import 'dart:js_util';
+import 'package:universal_html/html.dart';
+
 import 'payment_bridge.dart';
 
 class Razorpay {

@@ -3,40 +3,79 @@ library payment_bridge;
 import 'razorpay.dart';
 
 abstract class PaymentBridgeGateway {
-  Future create(
-      {double amount = 0,
-      String name = '',
-      String description = '',
-      String mobile = '',
-      String email = ''});
+  Future<PaymentBridgeResponse> create({
+    double amount = 0,
+    String name = '',
+    String description = '',
+    String mobile = '',
+    String email = '',
+  });
 }
 
-class PaymentBridgeSuccess {
-  String? status;
+abstract class PaymentBridgeResponse {
+  Map get json;
+}
+
+class PaymentBridgeSuccess extends PaymentBridgeResponse {
+  String? id;
   String? time;
   double? amount;
-  String? id;
+  String? status;
   String? orderId;
   String? signature;
 
   PaymentBridgeSuccess({
-    this.amount,
-    this.time,
-    this.status,
     this.id,
+    this.time,
+    this.amount,
+    this.status,
     this.orderId,
     this.signature,
   });
+
+  @override
+  Map get json {
+    return {
+      'id': id,
+      'time': time,
+      'amount': amount,
+      'status': status,
+      'orderId': orderId,
+      'signature': signature,
+    };
+  }
 }
 
-class PaymentBridgeError {
+class PaymentBridgeError extends PaymentBridgeSuccess {
   int? code;
   String? message;
 
   PaymentBridgeError({
     this.code,
     this.message,
-  });
+    String? id,
+    String? time,
+    double? amount,
+    String? status,
+    String? orderId,
+    String? signature,
+  }) : super(
+          id: id,
+          time: time,
+          amount: amount,
+          status: status,
+          orderId: orderId,
+          signature: signature,
+        );
+
+  @override
+  Map get json {
+    return {
+      ...super.json,
+      'code': code,
+      'message': message,
+    };
+  }
 }
 
 class PaymentBridge {
@@ -48,7 +87,7 @@ class PaymentBridge {
     }
   }
 
-  Future create({
+  Future<PaymentBridgeResponse> create({
     double amount = 0,
     String name = '',
     String description = '',
@@ -56,7 +95,7 @@ class PaymentBridge {
     String email = '',
   }) {
     if (paymentGateway != null) {
-      paymentGateway?.create(
+      return paymentGateway!.create(
         amount: amount,
         name: name,
         description: description,
@@ -64,6 +103,12 @@ class PaymentBridge {
         email: email,
       );
     }
-    return Future.value(12);
+
+    return Future.error(
+      PaymentBridgeError(
+        code: 0,
+        message: 'NO_GATEWAY_REGISTERED',
+      ),
+    );
   }
 }

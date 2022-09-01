@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:nb_utils/nb_utils.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'payment_bridge.dart';
-// import 'razorpay_web.dart' as payment;
+import 'razorpay_web.dart' as payment;
 
 class PaymentBridgeGatewayRazorpay implements PaymentBridgeGateway {
   Map<String, dynamic> options = {
@@ -14,19 +16,20 @@ class PaymentBridgeGatewayRazorpay implements PaymentBridgeGateway {
     print('PaymentBridgeGatewayRazorpay constructor');
 
     if (isWeb) {
-      // var razorpay = payment.Razorpay();
-      // razorpay.init();
+      var razorpay = payment.Razorpay();
+      razorpay.init();
     }
   }
 
   @override
-  Future<PaymentBridgeSuccess> create(
-      {double amount = 0,
-      String name = '',
-      String description = '',
-      String mobile = '',
-      String email = ''}) {
-    // 'key': 'rzp_live_MpiFkAutxyQL2s',
+  Future<PaymentBridgeResponse> create({
+    double amount = 0,
+    String name = '',
+    String description = '',
+    String mobile = '',
+    String email = '',
+  }) {
+    var completer = Completer<PaymentBridgeResponse>();
 
     options['amount'] = amount * 100;
     options['name'] = name;
@@ -34,24 +37,25 @@ class PaymentBridgeGatewayRazorpay implements PaymentBridgeGateway {
     options['prefill']['contact'] = mobile;
     options['prefill']['email'] = email;
 
-    if (isAndroid || isIos) {
+    if (isAndroid || isIOS) {
       var _razorpay = Razorpay();
 
       _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS,
           (PaymentSuccessResponse response) {
-        PaymentBridgeSuccess(
+        completer.complete(PaymentBridgeSuccess(
           id: response.paymentId,
+          amount: amount,
           orderId: response.orderId,
           signature: response.signature,
-        );
+        ));
       });
 
       _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR,
           (PaymentFailureResponse response) {
-        PaymentBridgeError(
+        completer.completeError(PaymentBridgeError(
           code: response.code,
           message: response.message,
-        );
+        ));
       });
 
       _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET,
@@ -63,10 +67,10 @@ class PaymentBridgeGatewayRazorpay implements PaymentBridgeGateway {
     }
 
     if (isWeb) {
-      // var razorpay = payment.Razorpay();
-      // razorpay.open(options);
+      var razorpay = payment.Razorpay();
+      razorpay.open(options);
     }
 
-    return Future.value(PaymentBridgeSuccess(amount: 0));
+    return completer.future;
   }
 }
