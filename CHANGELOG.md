@@ -1,3 +1,7 @@
+## 0.0.3
+
+* Dependencies updated
+
 ## 0.0.2
 
 * Bug fixes

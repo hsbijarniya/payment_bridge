@@ -1,6 +1,5 @@
 import 'dart:async';
-
-import 'package:nb_utils/nb_utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'payment_bridge.dart';
 import 'razorpay_web.dart' as payment;
@@ -13,9 +12,9 @@ class PaymentBridgeGatewayRazorpay implements PaymentBridgeGateway {
   PaymentBridgeGatewayRazorpay(Map opts) {
     options['key'] = opts['key'];
 
-    print('PaymentBridgeGatewayRazorpay constructor');
+    // print('PaymentBridgeGatewayRazorpay constructor');
 
-    if (isWeb) {
+    if (kIsWeb) {
       var razorpay = payment.Razorpay();
       razorpay.init();
     }
@@ -37,10 +36,13 @@ class PaymentBridgeGatewayRazorpay implements PaymentBridgeGateway {
     options['prefill']['contact'] = mobile;
     options['prefill']['email'] = email;
 
-    if (isAndroid || isIOS) {
-      var _razorpay = Razorpay();
+    if (kIsWeb) {
+      var razorpay = payment.Razorpay();
+      razorpay.open(options);
+    } else {
+      var razorpay = Razorpay();
 
-      _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS,
+      razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS,
           (PaymentSuccessResponse response) {
         completer.complete(PaymentBridgeSuccess(
           id: response.paymentId,
@@ -50,7 +52,7 @@ class PaymentBridgeGatewayRazorpay implements PaymentBridgeGateway {
         ));
       });
 
-      _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR,
+      razorpay.on(Razorpay.EVENT_PAYMENT_ERROR,
           (PaymentFailureResponse response) {
         completer.completeError(PaymentBridgeError(
           code: response.code,
@@ -58,16 +60,11 @@ class PaymentBridgeGatewayRazorpay implements PaymentBridgeGateway {
         ));
       });
 
-      _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET,
+      razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET,
           (ExternalWalletResponse response) {
         // Do something when an external wallet was selected
       });
 
-      _razorpay.open(options);
-    }
-
-    if (isWeb) {
-      var razorpay = payment.Razorpay();
       razorpay.open(options);
     }
 
